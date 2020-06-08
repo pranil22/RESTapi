@@ -6,6 +6,7 @@ var logger = require('morgan');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
+var passport = require('passport');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -26,8 +27,12 @@ connect
     console.log(err);
   })
 // view engine setup
+
+var authenticate = require('./authenticate');
+
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
+
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -41,6 +46,10 @@ app.use(session({
   resave: false,
   store: new FileStore()
 }))
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
@@ -48,19 +57,14 @@ app.use('/users', usersRouter);
 
 function auth(req, res, next) {
   //console.log(req.signedCookies);
-  if(req.session) {
-    if(req.session.user === "authenticated") {
-      next();
-    }
-    else {
-      var err = new Error('You are not authenticated');
-      err.status = 401;
-      return next(err);
-    }
-  } else {
-      var err = new Error('You are not authenticated');
-      err.status = 401;
-      return next(err);
+  console.log(req.user);
+  if(!req.user) {
+    var err = new Error('You are not authenticated');
+    err.status = 403;
+    next(err);
+  }
+  else {
+    next(err);
   }
 }
 
