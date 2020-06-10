@@ -3,12 +3,14 @@ const dishRouter = express.Router();
 const bodyParser = require('body-parser');
 
 const Dishes = require('../models/dishes');
+var auth = require('../authenticate');
 
 dishRouter.use(bodyParser.json());
 
 dishRouter.route('/')
 .get((req, res, next) => {
     Dishes.find({})
+        .populate('comments.author')
         .then((dishes) => {
             res.statusCode = 200;
             res.setHeader('Content-Type','application/json');
@@ -20,7 +22,7 @@ dishRouter.route('/')
             next(err);
         });
 })
-.post((req, res, next) => {
+.post(auth.verifyUser, (req, res, next) => {
     Dishes.create(req.body)
         .then((dish) => {
             console.log('Dish created');
@@ -32,11 +34,11 @@ dishRouter.route('/')
             next(err);
         });
 })
-.put((req, res, next) => {
+.put(auth.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end('This operation is not supported on this endpoint');
 })
-.delete((req, res, next) => {
+.delete(auth.verifyUser, (req, res, next) => {
     Dishes.remove({})
         .then((response) => {
             console.log(response);
@@ -52,6 +54,7 @@ dishRouter.route('/')
 dishRouter.route('/:dishId')
 .get((req, res, next) => {
     Dishes.findById(req.params.dishId)
+        .populate('comments.author')
         .then((dish) => {
             res.statusCode = 200;
             res.setHeader('Content-Type','application/json');
@@ -61,11 +64,11 @@ dishRouter.route('/:dishId')
             next(err);
         });
 })
-.post((req, res, next) => {
+.post(auth.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end('This operation is not supported at this endpoint');
 })
-.put((req, res, next) => {
+.put(auth.verifyUser, (req, res, next) => {
     Dishes.findByIdAndUpdate(
         req.params.dishId, 
         { $set: req.body } ,
@@ -81,7 +84,7 @@ dishRouter.route('/:dishId')
         next(err);
     });
 })
-.delete((req, res, next) => {
+.delete(auth.verifyUser, (req, res, next) => {
     Dishes.findByIdAndRemove(req.params.dishId)
         .exec()
         .then((response) => {
@@ -98,6 +101,7 @@ dishRouter.route('/:dishId')
 dishRouter.route('/:dishId/comments')
 .get((req, res, next) => {
     Dishes.findById(req.params.dishId)
+    .populate('comments.author')
     .exec()
     .then((dish) => {
         if(dish != null) {
@@ -115,17 +119,23 @@ dishRouter.route('/:dishId/comments')
         next(err);
     })
 })
-.post((req, res, next) => {
+.post(auth.verifyUser, (req, res, next) => {
     Dishes.findById(req.params.dishId)
         .exec()
         .then((dish) => {
             if(dish != null) {
+                console.log(req.user.__id);
+                req.body.author = req.user._id;
                 dish.comments.push(req.body);
                 dish.save()
                 .then((dish) => {
-                    res.statusCode = 200;
-                    res.setHeader('Content-Type','application/json');
-                    res.json(dish);
+                    Dishes.findById(dish.__id)
+                    .populate('comments.author')
+                    .then((dish) => {
+                        res.statusCode = 200;
+                        res.setHeader('Content-Type','application/json');
+                        res.json(dish);
+                    })
                 }, err => next(err));
             }
             else {
@@ -138,11 +148,11 @@ dishRouter.route('/:dishId/comments')
             next(err);
         });
 })
-.put((req, res, next) => {
+.put(auth.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end('This operation is not supported on this endpoint');
 })
-.delete((req, res, next) => {
+.delete(auth.verifyUser, (req, res, next) => {
     Dishes.findById(req.params.dishId)
         .exec()
         .then((dish) => {
@@ -171,6 +181,7 @@ dishRouter.route('/:dishId/comments')
 dishRouter.route('/:dishId/comments/:commentId')
 .get((req, res, next) => {
     Dishes.findById(req.params.dishId)
+    .populate('comments.author')
     .exec()
     .then((dish) => {
         if(dish && dish.comments.id(req.params.commentId)) {
@@ -191,11 +202,11 @@ dishRouter.route('/:dishId/comments/:commentId')
     }, err => next(err))
     .catch(err => next(err));
 })
-.post((req, res, next) => {
+.post(auth.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end('This operation is not supported at this endpoint');
 })
-.put((req, res, next) => {
+.put(auth.verifyUser, (req, res, next) => {
     Dishes.findById(req.params.dishId)
     .exec()
     .then((dish) => {
@@ -209,9 +220,13 @@ dishRouter.route('/:dishId/comments/:commentId')
 
             dish.save()
             .then((dish) => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type','application/json');
-                res.json(dish);
+                Dishes.findById(dish._id)
+                .populate('comments.author')
+                .then((dish) => {
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type','application/json');
+                    res.json(dish);
+                })
             }, err => next(err));
 
         }
@@ -228,7 +243,7 @@ dishRouter.route('/:dishId/comments/:commentId')
     }, err => next(err))
     .catch(err => next(err));
 })
-.delete((req, res, next) => {
+.delete(auth.verifyUser, (req, res, next) => {
     Dishes.findById(req.params.dishId)
     .exec()
     .then((dish) => {
@@ -236,9 +251,13 @@ dishRouter.route('/:dishId/comments/:commentId')
             dish.comments.id(req.params.commentId).remove();
             dish.save()
             .then((dish) => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type','application/json');
-                res.json(dish);
+                Dishes.findById(dish._id)
+                .populate('comments.author')
+                .then((dish) => {
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type','application/json');
+                    res.json(dish);
+                })
             }, err => next(err));
 
         }

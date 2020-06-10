@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const leaderRouter = express.Router();
 const Leaders = require('../models/leaders');
+var auth = require('../authenticate');
 
 leaderRouter.use(bodyParser.json());
 
@@ -15,7 +16,7 @@ leaderRouter.route('/')
         }, err => next(err))
         .catch(err => next(err));
 })
-.post((req, res, next) => {
+.post(auth.verifyUser, (req, res, next) => {
     Leaders.create(req.body)
         .then((leader) => {
             res.statusCode = 201;
@@ -24,11 +25,11 @@ leaderRouter.route('/')
         }, err => next(err))
         .catch(err => next(err));   
 })
-.put((req, res, next) => {
+.put(auth.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end('This operation is not supprted at this endpoint'); 
 })
-.delete((req, res, next) => {
+.delete(auth.verifyUser, (req, res, next) => {
     Leaders.remove({})
         .then((resp) => {
             res.statusCode = 200;
@@ -48,11 +49,11 @@ leaderRouter.route('/:leaderId')
         }, err => next(err))
         .catch(err => next(err));
 })
-.post((req, res, next) => {
+.post(auth.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end('This operation is not supprted at this endpoint');
 })
-.put((req, res, next) => {
+.put(auth.verifyUser, (req, res, next) => {
     Leaders.findByIdAndUpdate(req.params.leaderId, 
         { $set: req.body },
         { new: true }
@@ -64,7 +65,7 @@ leaderRouter.route('/:leaderId')
         }, err => next(err))
         .catch(err => next(err));
 })
-.delete((req, res, next) => {
+.delete(auth.verifyUser, (req, res, next) => {
     Leaders.findByIdAndRemove(req.params.leaderId)
     .then((response) => {
         res.statusCode = 200;

@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const promoRouter = express.Router();
 const Promotions = require('../models/promotions');
+var auth = require('../authenticate');
 
 promoRouter.use(bodyParser.json());
 
@@ -15,7 +16,7 @@ promoRouter.route('/')
         }, err => next(err))
         .catch(err => next(err));
 })
-.post((req, res, next) => {
+.post(auth.verifyUser, (req, res, next) => {
     Promotions.create(req.body)
         .then((promo) => {
             res.statusCode = 201;
@@ -24,11 +25,11 @@ promoRouter.route('/')
         }, err => next(err))
         .catch(err => next(err));   
 })
-.put((req, res, next) => {
+.put(auth.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end('This operation is not supprted at this endpoint'); 
 })
-.delete((req, res, next) => {
+.delete(auth.verifyUser, (req, res, next) => {
     Promotions.remove({})
         .then((resp) => {
             res.statusCode = 200;
@@ -48,11 +49,11 @@ promoRouter.route('/:promoId')
         }, err => next(err))
         .catch(err => next(err));
 })
-.post((req, res, next) => {
+.post(auth.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end('This operation is not supprted at this endpoint');
 })
-.put((req, res, next) => {
+.put(auth.verifyUser, (req, res, next) => {
     Promotions.findByIdAndUpdate(req.params.promoId, 
         { $set: req.body },
         { new: true }
@@ -64,7 +65,7 @@ promoRouter.route('/:promoId')
         }, err => next(err))
         .catch(err => next(err));
 })
-.delete((req, res, next) => {
+.delete(auth.verifyUser, (req, res, next) => {
     Promotions.findByIdAndRemove(req.params.promoId)
     .then((response) => {
         res.statusCode = 200;
