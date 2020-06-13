@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["z4oYC"]); }
+
+__d("TransAppInlineMode",[],(function(a,b,c,d,e,f){e.exports=Object.freeze({TRANSLATION:"TRANSLATION",APPROVE:"APPROVE",REPORT:"REPORT",NO_INLINE:"NO_INLINE"})}),null);
