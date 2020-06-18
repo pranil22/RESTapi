@@ -7,7 +7,7 @@ var auth = require('../authenticate');
 const cors = require('./cors');
 
 dishRouter.use(bodyParser.json());
-
+ 
 dishRouter.route('/')
 .options(cors.corsWithOptions, (req, res, next) => {
     res.sendStatus(200);
@@ -274,7 +274,7 @@ dishRouter.route('/:dishId/comments/:commentId')
         if(dish && dish.comments.id(req.params.commentId)) {
             var id1 = (req.user.id).toString();
             var id2 = (dish.comments.id(req.params.commentId).author).toString();
-    
+  
             if(id1 === id2) {
                 dish.comments.id(req.params.commentId).remove();
                 dish.save()

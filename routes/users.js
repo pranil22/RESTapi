@@ -10,7 +10,7 @@ const cors = require('./cors');
 router.use(bodyParser.json());
 /* GET users listing. */
 
-
+ 
 router.get('/',cors.corsWithOptions, auth.verifyUser, auth.verifyAdmin, function(req, res, next) {
   User.find({})
     .then((dishes) => {
